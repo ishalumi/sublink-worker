@@ -1,3 +1,10 @@
+import { REJECT_ACTION_RULES } from '../../config/index.js';
+
+const resolveClashTarget = (outbound, translator) => {
+    if (REJECT_ACTION_RULES.has(outbound)) return 'REJECT';
+    return translator('outboundNames.' + outbound);
+};
+
 export function emitClashRules(rules = [], translator) {
     if (!translator) {
         throw new Error('emitClashRules requires a translator function');
@@ -9,14 +16,14 @@ export function emitClashRules(rules = [], translator) {
         .forEach(rule => {
             rule.src_ip_cidr.forEach(cidr => {
                 if (!cidr) return;
-                results.push(`SRC-IP-CIDR,${cidr},${translator('outboundNames.' + rule.outbound)}`);
+                results.push(`SRC-IP-CIDR,${cidr},${resolveClashTarget(rule.outbound, translator)}`);
             });
         });
     rules
         .filter(rule => Array.isArray(rule.domain_suffix) && rule.domain_suffix.length > 0)
         .forEach(rule => {
             rule.domain_suffix.forEach(suffix => {
-                results.push(`DOMAIN-SUFFIX,${suffix},${translator('outboundNames.' + rule.outbound)}`);
+                results.push(`DOMAIN-SUFFIX,${suffix},${resolveClashTarget(rule.outbound, translator)}`);
             });
         });
 
@@ -24,7 +31,7 @@ export function emitClashRules(rules = [], translator) {
         .filter(rule => Array.isArray(rule.domain_keyword) && rule.domain_keyword.length > 0)
         .forEach(rule => {
             rule.domain_keyword.forEach(keyword => {
-                results.push(`DOMAIN-KEYWORD,${keyword},${translator('outboundNames.' + rule.outbound)}`);
+                results.push(`DOMAIN-KEYWORD,${keyword},${resolveClashTarget(rule.outbound, translator)}`);
             });
         });
 
@@ -32,7 +39,7 @@ export function emitClashRules(rules = [], translator) {
         .filter(rule => Array.isArray(rule.site_rules) && rule.site_rules[0])
         .forEach(rule => {
             rule.site_rules.forEach(site => {
-                results.push(`RULE-SET,${site},${translator('outboundNames.' + rule.outbound)}`);
+                results.push(`RULE-SET,${site},${resolveClashTarget(rule.outbound, translator)}`);
             });
         });
 
@@ -40,7 +47,7 @@ export function emitClashRules(rules = [], translator) {
         .filter(rule => Array.isArray(rule.ip_rules) && rule.ip_rules[0])
         .forEach(rule => {
             rule.ip_rules.forEach(ip => {
-                results.push(`RULE-SET,${ip}-ip,${translator('outboundNames.' + rule.outbound)},no-resolve`);
+                results.push(`RULE-SET,${ip}-ip,${resolveClashTarget(rule.outbound, translator)},no-resolve`);
             });
         });
 
@@ -48,7 +55,7 @@ export function emitClashRules(rules = [], translator) {
         .filter(rule => Array.isArray(rule.ip_cidr) && rule.ip_cidr.length > 0)
         .forEach(rule => {
             rule.ip_cidr.forEach(cidr => {
-                results.push(`IP-CIDR,${cidr},${translator('outboundNames.' + rule.outbound)},no-resolve`);
+                results.push(`IP-CIDR,${cidr},${resolveClashTarget(rule.outbound, translator)},no-resolve`);
             });
         });
 
